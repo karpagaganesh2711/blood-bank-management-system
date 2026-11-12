@@ -1,0 +1,289 @@
+{
+  "entities": {
+    "User": {
+      "collection": "users",
+      "fields": {
+        "uid": { "type": "string", "description": "Auth UID" },
+        "role": { "type": "string", "description": "DONOR | HOSPITAL | STAFF | ADMIN" },
+        "fullName": { "type": "string", "description": "User full name" },
+        "email": { "type": "string", "description": "Email address" },
+        "mobileNumber": { "type": "string", "description": "Contact number" },
+        "phoneVerified": { "type": "boolean", "description": "Phone verification flag" },
+        "emailVerified": { "type": "boolean", "description": "Email verification flag" },
+        "accountStatus": { "type": "string", "description": "PENDING | ACTIVE | SUSPENDED | DISABLED" },
+        "profileComplete": { "type": "boolean", "description": "Profile completion status" },
+        "createdAt": { "type": "string", "description": "Creation timestamp" },
+        "updatedAt": { "type": "string", "description": "Last updated timestamp" },
+        "lastLoginAt": { "type": "string", "description": "Last login timestamp" }
+      }
+    },
+    "Donor": {
+      "collection": "donors",
+      "fields": {
+        "donorId": { "type": "string", "description": "Donor document ID" },
+        "uid": { "type": "string", "description": "User UID reference" },
+        "fullName": { "type": "string", "description": "Full name" },
+        "dateOfBirth": { "type": "string", "description": "DOB YYYY-MM-DD" },
+        "gender": { "type": "string", "description": "MALE | FEMALE | OTHER" },
+        "bloodGroup": { "type": "string", "description": "A+ | A- | B+ | B- | AB+ | AB- | O+ | O-" },
+        "mobileNumber": { "type": "string", "description": "Mobile number" },
+        "email": { "type": "string", "description": "Email address" },
+        "address": { "type": "string", "description": "Residential address" },
+        "city": { "type": "string", "description": "City" },
+        "emergencyContact": { "type": "map", "description": "Name, relationship, mobileNumber" },
+        "lastDonationDate": { "type": "string", "description": "ISO timestamp" },
+        "verificationStatus": { "type": "string", "description": "PENDING | VERIFIED | REQUIRES_REVIEW" },
+        "createdAt": { "type": "string", "description": "Creation timestamp" },
+        "updatedAt": { "type": "string", "description": "Update timestamp" }
+      }
+    },
+    "Hospital": {
+      "collection": "hospitals",
+      "fields": {
+        "hospitalId": { "type": "string", "description": "Hospital ID" },
+        "uid": { "type": "string", "description": "User UID of primary admin" },
+        "hospitalName": { "type": "string", "description": "Official name" },
+        "registrationNumber": { "type": "string", "description": "Govt registration number" },
+        "licenseNumber": { "type": "string", "description": "Health authority license" },
+        "hospitalType": { "type": "string", "description": "GOVERNMENT | PRIVATE | CLINIC | MEDICAL_COLLEGE | TEACHING_HOSPITAL" },
+        "address": { "type": "string", "description": "Hospital physical address" },
+        "city": { "type": "string", "description": "City" },
+        "contactNumber": { "type": "string", "description": "Hospital landline/contact" },
+        "officialEmail": { "type": "string", "description": "Official contact email" },
+        "contactPerson": { "type": "string", "description": "Primary liaison" },
+        "hospitalAdministratorName": { "type": "string", "description": "Administrator in charge" },
+        "status": { "type": "string", "description": "PENDING | APPROVED | REJECTED | SUSPENDED" },
+        "verifiedBy": { "type": "string", "description": "Admin UID who verified" },
+        "verifiedAt": { "type": "string", "description": "Verification timestamp" },
+        "rejectionReason": { "type": "string", "description": "Reason if rejected" },
+        "createdAt": { "type": "string", "description": "Creation timestamp" },
+        "updatedAt": { "type": "string", "description": "Update timestamp" }
+      }
+    },
+    "Doctor": {
+      "collection": "hospitals/{hospitalId}/doctors",
+      "fields": {
+        "doctorId": { "type": "string", "description": "Doctor ID" },
+        "hospitalId": { "type": "string", "description": "Hospital parent ID" },
+        "name": { "type": "string", "description": "Doctor full name" },
+        "specialization": { "type": "string", "description": "Medical specialty" },
+        "registrationNumber": { "type": "string", "description": "Medical Council reg ID" },
+        "contactNumber": { "type": "string", "description": "Doctor mobile" },
+        "email": { "type": "string", "description": "Doctor email" },
+        "status": { "type": "string", "description": "ACTIVE | INACTIVE" },
+        "createdAt": { "type": "string", "description": "Creation timestamp" },
+        "updatedAt": { "type": "string", "description": "Update timestamp" }
+      }
+    },
+    "DonationAppointment": {
+      "collection": "appointments",
+      "fields": {
+        "appointmentId": { "type": "string", "description": "Appointment ID" },
+        "donorId": { "type": "string", "description": "Donor document ID" },
+        "date": { "type": "string", "description": "Date YYYY-MM-DD" },
+        "startTime": { "type": "string", "description": "Start time HH:MM" },
+        "endTime": { "type": "string", "description": "End time HH:MM" },
+        "capacity": { "type": "number", "description": "Total slot capacity" },
+        "bookedCount": { "type": "number", "description": "Total booked count" },
+        "status": { "type": "string", "description": "AVAILABLE | BOOKED | CANCELLED | RESCHEDULED | COMPLETED | NO_SHOW" },
+        "bookedAt": { "type": "string", "description": "Booking timestamp" },
+        "cancelledAt": { "type": "string", "description": "Cancellation timestamp" },
+        "cancellationReason": { "type": "string", "description": "Cancellation reason" },
+        "createdAt": { "type": "string", "description": "Creation timestamp" },
+        "updatedAt": { "type": "string", "description": "Update timestamp" }
+      }
+    },
+    "DonorScreening": {
+      "collection": "screenings",
+      "fields": {
+        "screeningId": { "type": "string", "description": "Screening record ID" },
+        "donorId": { "type": "string", "description": "Donor ID" },
+        "appointmentId": { "type": "string", "description": "Appointment ID" },
+        "bloodPressure": { "type": "string", "description": "e.g. 120/80 mmHg" },
+        "pulse": { "type": "number", "description": "BPM" },
+        "temperature": { "type": "number", "description": "Degrees Celsius" },
+        "hemoglobin": { "type": "number", "description": "g/dL" },
+        "weight": { "type": "number", "description": "kg" },
+        "questionnaire": { "type": "map", "description": "Medical questionnaire key/boolean answers" },
+        "observations": { "type": "string", "description": "Clinical remarks" },
+        "finalDecision": { "type": "string", "description": "ELIGIBLE | DEFERRED | NOT_ELIGIBLE" },
+        "screenedBy": { "type": "string", "description": "Staff UID" },
+        "screenedAt": { "type": "string", "description": "Screening timestamp" },
+        "createdAt": { "type": "string", "description": "Record creation timestamp" }
+      }
+    },
+    "Donation": {
+      "collection": "donations",
+      "fields": {
+        "donationId": { "type": "string", "description": "Donation record ID" },
+        "donorId": { "type": "string", "description": "Donor ID" },
+        "appointmentId": { "type": "string", "description": "Appointment ID" },
+        "screeningId": { "type": "string", "description": "Screening record ID" },
+        "bloodUnitId": { "type": "string", "description": "Associated blood unit ID" },
+        "bloodGroup": { "type": "string", "description": "Blood Group" },
+        "collectionDate": { "type": "string", "description": "Collection timestamp" },
+        "collectionLocation": { "type": "string", "description": "Center or mobile blood bank" },
+        "collectedBy": { "type": "string", "description": "Phlebotomist / Staff UID" },
+        "status": { "type": "string", "description": "SCHEDULED | SCREENING | COLLECTED | TESTING | COMPLETED | REJECTED" },
+        "createdAt": { "type": "string", "description": "Creation timestamp" },
+        "updatedAt": { "type": "string", "description": "Update timestamp" }
+      }
+    },
+    "BloodUnit": {
+      "collection": "bloodUnits",
+      "fields": {
+        "bloodUnitId": { "type": "string", "description": "Unit ID (e.g. BU-2026-XXXX)" },
+        "donationId": { "type": "string", "description": "Donation ID" },
+        "donorId": { "type": "string", "description": "Donor ID" },
+        "bloodGroup": { "type": "string", "description": "Blood Group" },
+        "collectionDate": { "type": "string", "description": "Collection timestamp" },
+        "expiryDate": { "type": "string", "description": "Expiry timestamp (35/42 days)" },
+        "status": { "type": "string", "description": "COLLECTED | UNDER_TESTING | AVAILABLE | RESERVED | ISSUED | DISPATCHED | RECEIVED | EXPIRED | DISCARDED | REJECTED" },
+        "barcodeValue": { "type": "string", "description": "Code128 Barcode text" },
+        "qrCodeValue": { "type": "string", "description": "ISBT 128 QR string" },
+        "testingStatus": { "type": "string", "description": "PENDING | PASSED | FAILED" },
+        "testedBy": { "type": "string", "description": "Lab tech UID" },
+        "testedAt": { "type": "string", "description": "Testing timestamp" },
+        "approvedBy": { "type": "string", "description": "Staff / Doctor UID" },
+        "approvedAt": { "type": "string", "description": "Approval timestamp" },
+        "reservedForRequestId": { "type": "string", "description": "Blood request ID if reserved" },
+        "issuedAt": { "type": "string", "description": "Issue timestamp" },
+        "receivedAt": { "type": "string", "description": "Receipt timestamp" },
+        "discardedAt": { "type": "string", "description": "Discard timestamp" },
+        "discardReason": { "type": "string", "description": "Discard reason" },
+        "createdAt": { "type": "string", "description": "Creation timestamp" },
+        "updatedAt": { "type": "string", "description": "Update timestamp" }
+      }
+    },
+    "BloodInventory": {
+      "collection": "bloodInventory",
+      "fields": {
+        "bloodGroup": { "type": "string", "description": "Doc ID: A+ | A- | B+ | B- | AB+ | AB- | O+ | O-" },
+        "available": { "type": "number", "description": "Units available" },
+        "reserved": { "type": "number", "description": "Units reserved" },
+        "issued": { "type": "number", "description": "Units issued" },
+        "expired": { "type": "number", "description": "Units expired" },
+        "discarded": { "type": "number", "description": "Units discarded" },
+        "minimumThreshold": { "type": "number", "description": "Warning stock level" },
+        "criticalThreshold": { "type": "number", "description": "Emergency stock level" },
+        "updatedAt": { "type": "string", "description": "Last inventory sync" }
+      }
+    },
+    "BloodRequest": {
+      "collection": "bloodRequests",
+      "fields": {
+        "requestId": { "type": "string", "description": "Request ID" },
+        "hospitalId": { "type": "string", "description": "Requesting Hospital ID" },
+        "patientId": { "type": "string", "description": "Patient identifier" },
+        "caseId": { "type": "string", "description": "Clinical / OT case number" },
+        "bloodGroup": { "type": "string", "description": "Requested blood group" },
+        "unitsRequired": { "type": "number", "description": "Units needed" },
+        "priority": { "type": "string", "description": "NORMAL | URGENT | EMERGENCY" },
+        "doctorId": { "type": "string", "description": "Attending Doctor ID" },
+        "status": { "type": "string", "description": "REQUESTED | APPROVED | RESERVED | ISSUED | DISPATCHED | RECEIVED | COMPLETED | REJECTED | CANCELLED | EXPIRED | PARTIALLY_FULFILLED" },
+        "requestedAt": { "type": "string", "description": "Request timestamp" },
+        "approvedBy": { "type": "string", "description": "Staff/Admin UID" },
+        "approvedAt": { "type": "string", "description": "Approval timestamp" },
+        "reservedAt": { "type": "string", "description": "Reservation timestamp" },
+        "issuedAt": { "type": "string", "description": "Issue timestamp" },
+        "dispatchedAt": { "type": "string", "description": "Dispatch timestamp" },
+        "receivedAt": { "type": "string", "description": "Received timestamp" },
+        "rejectionReason": { "type": "string", "description": "Rejection reason" },
+        "createdAt": { "type": "string", "description": "Creation timestamp" },
+        "updatedAt": { "type": "string", "description": "Update timestamp" }
+      }
+    },
+    "EmergencyRequest": {
+      "collection": "emergencyRequests",
+      "fields": {
+        "emergencyId": { "type": "string", "description": "Emergency dispatch ID" },
+        "requestId": { "type": "string", "description": "Associated blood request ID" },
+        "hospitalId": { "type": "string", "description": "Hospital ID" },
+        "patientId": { "type": "string", "description": "Patient ID" },
+        "bloodGroup": { "type": "string", "description": "Blood group" },
+        "unitsRequired": { "type": "number", "description": "Units required" },
+        "doctorId": { "type": "string", "description": "Doctor ID" },
+        "status": { "type": "string", "description": "PENDING | ACKNOWLEDGED | IN_REVIEW | RESERVED | DISPATCHED | RECEIVED | COMPLETED | ESCALATED | CANCELLED" },
+        "createdAt": { "type": "string", "description": "Timestamp" },
+        "responseDeadline": { "type": "string", "description": "ISO timestamp (15-min SLA)" },
+        "assignedStaffId": { "type": "string", "description": "Assigned Staff UID" },
+        "escalationLevel": { "type": "number", "description": "Escalation tier 1-3" },
+        "acknowledgedAt": { "type": "string", "description": "Acknowledgment timestamp" },
+        "reservedAt": { "type": "string", "description": "Reservation timestamp" },
+        "dispatchedAt": { "type": "string", "description": "Dispatch timestamp" },
+        "receivedAt": { "type": "string", "description": "Receipt timestamp" },
+        "updatedAt": { "type": "string", "description": "Last update timestamp" }
+      }
+    },
+    "BloodDispatch": {
+      "collection": "dispatches",
+      "fields": {
+        "dispatchId": { "type": "string", "description": "Dispatch ID" },
+        "requestId": { "type": "string", "description": "Request ID" },
+        "hospitalId": { "type": "string", "description": "Destination Hospital ID" },
+        "bloodUnitIds": { "type": "array", "description": "List of blood unit IDs" },
+        "quantity": { "type": "number", "description": "Total units" },
+        "dispatchedBy": { "type": "string", "description": "Staff UID" },
+        "dispatchedAt": { "type": "string", "description": "Departure timestamp" },
+        "status": { "type": "string", "description": "PREPARING | DISPATCHED | RECEIVED | DISCREPANCY" },
+        "notes": { "type": "string", "description": "Cold chain notes / vehicle ID" }
+      }
+    },
+    "BloodReceipt": {
+      "collection": "receipts",
+      "fields": {
+        "receiptId": { "type": "string", "description": "Receipt confirmation ID" },
+        "dispatchId": { "type": "string", "description": "Associated dispatch ID" },
+        "requestId": { "type": "string", "description": "Request ID" },
+        "hospitalId": { "type": "string", "description": "Hospital ID" },
+        "receivedBy": { "type": "string", "description": "Hospital receiver name / UID" },
+        "receivedAt": { "type": "string", "description": "Confirmation timestamp" },
+        "quantityReceived": { "type": "number", "description": "Units received" },
+        "bloodUnitIds": { "type": "array", "description": "List of verified blood unit barcodes" },
+        "verificationStatus": { "type": "string", "description": "MATCHED | DISCREPANCY" },
+        "discrepancy": { "type": "map", "description": "Discrepancy details if any" }
+      }
+    },
+    "Notification": {
+      "collection": "notifications",
+      "fields": {
+        "notificationId": { "type": "string", "description": "Notification ID" },
+        "recipientUid": { "type": "string", "description": "Recipient User UID or 'ALL'" },
+        "type": { "type": "string", "description": "APPOINTMENT | REQUEST | EMERGENCY | INVENTORY | EXPIRY | DISPATCH | RECEIPT | HOSPITAL | SYSTEM" },
+        "title": { "type": "string", "description": "Short title" },
+        "message": { "type": "string", "description": "Notification body" },
+        "priority": { "type": "string", "description": "LOW | NORMAL | HIGH | CRITICAL" },
+        "read": { "type": "boolean", "description": "Read flag" },
+        "relatedResourceType": { "type": "string", "description": "e.g. requests, units" },
+        "relatedResourceId": { "type": "string", "description": "Target ID" },
+        "createdAt": { "type": "string", "description": "Timestamp" },
+        "readAt": { "type": "string", "description": "Read timestamp" }
+      }
+    },
+    "AuditLog": {
+      "collection": "auditLogs",
+      "fields": {
+        "auditId": { "type": "string", "description": "Audit ID" },
+        "actorUid": { "type": "string", "description": "UID who performed action" },
+        "actorRole": { "type": "string", "description": "Role of actor" },
+        "action": { "type": "string", "description": "Action performed" },
+        "resourceType": { "type": "string", "description": "Target collection" },
+        "resourceId": { "type": "string", "description": "Target document ID" },
+        "previousValue": { "type": "map", "description": "Previous state" },
+        "newValue": { "type": "map", "description": "New state" },
+        "timestamp": { "type": "string", "description": "ISO timestamp" }
+      }
+    },
+    "SystemSettings": {
+      "collection": "systemSettings",
+      "fields": {
+        "settingId": { "type": "string", "description": "Config document key" },
+        "coldChainAlertThreshold": { "type": "number", "description": "Cold chain temp limit" },
+        "emergencySlaMinutes": { "type": "number", "description": "Emergency SLA in minutes" },
+        "autoEscalateEmergency": { "type": "boolean", "description": "Auto escalation enabled" },
+        "bloodUnitExpiryDays": { "type": "number", "description": "Default unit shelf life" },
+        "updatedAt": { "type": "string", "description": "Last updated" }
+      }
+    }
+  }
+}

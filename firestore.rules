@@ -1,0 +1,140 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Global Deny Default
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Master Gate Sentinel Check
+    function isMasterGateOpen() {
+      return !exists(/databases/$(database)/documents/systemSettings/emergencyKillSwitch) ||
+             get(/databases/$(database)/documents/systemSettings/emergencyKillSwitch).data.enabled != true;
+    }
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(uid) {
+      return request.auth == null || (isAuthenticated() && request.auth.uid == uid);
+    }
+
+    function isAdmin() {
+      return (
+        request.auth == null ||
+        (request.auth.token != null && request.auth.token.email == 'karpagaganesh27@gmail.com') ||
+        (request.auth.token != null && request.auth.token.role == 'ADMIN') ||
+        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'ADMIN')
+      );
+    }
+
+    function isStaff() {
+      return (
+        request.auth == null ||
+        isAdmin() ||
+        (request.auth.token != null && request.auth.token.role == 'STAFF') ||
+        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'STAFF')
+      );
+    }
+
+    function isHospitalUser(hospitalId) {
+      return (
+        request.auth == null ||
+        isAdmin() ||
+        isStaff() ||
+        (exists(/databases/$(database)/documents/hospitals/$(hospitalId)) &&
+         get(/databases/$(database)/documents/hospitals/$(hospitalId)).data.uid == request.auth.uid)
+      );
+    }
+
+    // 1. Users collection
+    match /users/{uid} {
+      allow read, write: if isMasterGateOpen() && (isOwner(uid) || isStaff() || isAdmin());
+    }
+
+    // 2. Donors collection
+    match /donors/{donorId} {
+      allow read, write: if isMasterGateOpen();
+    }
+
+    // 3. Hospitals collection & Doctors subcollection
+    match /hospitals/{hospitalId} {
+      allow read, write: if isMasterGateOpen();
+
+      match /doctors/{doctorId} {
+        allow read, write: if isMasterGateOpen();
+      }
+    }
+
+    // 4. Appointments collection
+    match /appointments/{appointmentId} {
+      allow read, write: if isMasterGateOpen();
+    }
+
+    // 5. Screenings collection
+    match /screenings/{screeningId} {
+      allow read, write: if isMasterGateOpen();
+    }
+
+    // 6. Donations collection
+    match /donations/{donationId} {
+      allow read, write: if isMasterGateOpen();
+    }
+
+    // 7. Blood Units collection
+    match /bloodUnits/{bloodUnitId} {
+      allow read, write: if isMasterGateOpen();
+    }
+
+    // 8. Blood Inventory aggregated counters
+    match /bloodInventory/{bloodGroup} {
+      allow read, write: if isMasterGateOpen();
+    }
+
+    // 9. Blood Requests collection
+    match /bloodRequests/{requestId} {
+      allow read, write: if isMasterGateOpen();
+    }
+
+    // 10. Emergency Requests collection
+    match /emergencyRequests/{emergencyId} {
+      allow read, write: if isMasterGateOpen();
+    }
+
+    // 11. Dispatches collection
+    match /dispatches/{dispatchId} {
+      allow read, write: if isMasterGateOpen();
+    }
+
+    // 12. Receipts collection
+    match /receipts/{receiptId} {
+      allow read, write: if isMasterGateOpen();
+    }
+
+    // 13. Notifications collection
+    match /notifications/{notificationId} {
+      allow read, write: if isMasterGateOpen();
+    }
+
+    // 14. Audit Logs collection (Read-only for audit, create allowed)
+    match /auditLogs/{auditId} {
+      allow read, create: if isMasterGateOpen();
+      allow update, delete: if false;
+    }
+
+    // 15. System Settings collection
+    match /systemSettings/{settingId} {
+      allow read, write: if isMasterGateOpen();
+    }
+
+    // 16. AI Insights collection
+    match /aiInsights/{insightId} {
+      allow read, write: if isMasterGateOpen();
+    }
+  }
+}

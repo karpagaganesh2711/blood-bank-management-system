@@ -1,0 +1,6 @@
+{
+  "name": "HemaFlow Blood Bank Management System",
+  "description": "Comprehensive blood bank and transfusion management platform with real-time inventory tracking, donor eligibility management, emergency requisition fulfillment, and cross-match compatibility analysis.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

@@ -1,0 +1,1848 @@
+# HEMORA — Backend Development Prompt
+
+## 1. PROJECT OVERVIEW
+
+Build the complete backend architecture for **HEMORA**, a professional Blood Bank Management and Emergency Blood Coordination Platform.
+
+HEMORA is designed as both:
+
+- A college engineering project
+- A realistic real-world blood management platform
+
+The backend must support the existing HEMORA frontend and provide a secure, scalable foundation for future production deployment.
+
+The backend must strictly enforce:
+
+- Authentication
+- Role-based access control
+- Data validation
+- Hospital verification
+- Blood request workflows
+- Donor management
+- Donation management
+- Blood inventory lifecycle
+- Emergency escalation
+- Notifications
+- Audit logging
+- Reports
+- AI data services
+- Privacy and security
+
+---
+
+# 2. BACKEND TECHNOLOGY STACK
+
+Use the Firebase ecosystem as the primary backend.
+
+### Core Backend
+
+- Firebase Authentication
+- Cloud Firestore
+- Firebase Cloud Functions
+- Firebase Cloud Messaging
+- Firebase Storage
+- Firebase App Check
+- Firebase Security Rules
+
+### Recommended Runtime
+
+- Node.js
+- TypeScript
+
+### Optional supporting technologies
+
+Use only where genuinely useful:
+
+- Firebase Admin SDK
+- Cloud Scheduler
+- Cloud Tasks
+- Zod or equivalent validation library
+- Firebase Emulator Suite
+- structured logging
+
+Do NOT introduce an unnecessary separate backend server unless a specific requirement cannot reasonably be implemented with Firebase.
+
+---
+
+# 3. BACKEND ARCHITECTURE
+
+Design the backend using a modular architecture.
+
+Suggested structure:
+
+```text
+functions/
+├── src/
+│   ├── config/
+│   ├── auth/
+│   ├── users/
+│   ├── donors/
+│   ├── hospitals/
+│   ├── doctors/
+│   ├── appointments/
+│   ├── donations/
+│   ├── screening/
+│   ├── bloodUnits/
+│   ├── inventory/
+│   ├── requests/
+│   ├── emergency/
+│   ├── dispatch/
+│   ├── notifications/
+│   ├── reports/
+│   ├── audit/
+│   ├── ai/
+│   ├── settings/
+│   ├── validators/
+│   ├── utils/
+│   └── index.ts
+│
+├── package.json
+└── tsconfig.json
+
+firestore.rules
+firestore.indexes.json
+firebase.json
+```
+
+Keep business logic separated from Firebase trigger handlers.
+
+Use reusable services, validators, authorization middleware/helpers, and repository/data-access patterns where appropriate.
+
+---
+
+# 4. AUTHENTICATION
+
+Implement Firebase Authentication.
+
+Support:
+
+- Mobile number authentication
+- Email/password authentication where appropriate
+- Password reset
+- Account verification
+- Session management
+- Account status
+
+During development, allow mobile registration without requiring OTP.
+
+However, the architecture must already support:
+
+```text
+mobileNumber
+phoneVerified
+email
+emailVerified
+verificationStatus
+```
+
+so real OTP verification can be enabled later.
+
+Never store passwords directly in Firestore.
+
+---
+
+# 5. USER ROLES
+
+HEMORA has four roles:
+
+```text
+DONOR
+HOSPITAL
+STAFF
+ADMIN
+```
+
+Role information must be securely associated with the authenticated Firebase user.
+
+Use Firebase Custom Claims for authorization-sensitive role checks where appropriate.
+
+Firestore data must never rely solely on frontend role selection.
+
+The backend must independently verify:
+
+```text
+Firebase UID
+Authentication status
+Role
+Account status
+Resource ownership
+Permissions
+```
+
+A user must never gain permissions simply by modifying frontend code or API requests.
+
+---
+
+# 6. ROLE-BASED ACCESS CONTROL
+
+Implement strict RBAC.
+
+## DONOR
+
+Can:
+
+- View own profile
+- Update allowed profile information
+- View own appointments
+- Book appointment
+- Reschedule appointment
+- Cancel appointment
+- View own donation history
+- View own notifications
+- View donation-related information
+- Manage own voluntary donation appointments
+
+Cannot:
+
+- Create blood requests
+- Modify inventory
+- Approve requests
+- Access hospital data
+- Access other donor records
+- Record donations
+- Perform medical screening
+- Issue blood
+- Modify blood units
+
+---
+
+## HOSPITAL
+
+Can:
+
+- Manage own hospital profile
+- Manage own doctors
+- Create blood requests
+- View own requests
+- Track request status
+- Create emergency requests
+- Receive notifications
+- Confirm receipt
+- Record discrepancies
+- View own reports
+
+Cannot:
+
+- Modify inventory
+- Approve its own requests
+- Add blood units
+- Modify donor records
+- Approve hospitals
+- Access other hospitals' private data
+
+---
+
+## STAFF
+
+Can:
+
+- Manage donors
+- Manage donor appointments
+- Perform screening
+- Record donations
+- Record testing results
+- Manage blood units
+- Manage inventory
+- Process requests
+- Handle emergency requests
+- Reserve blood
+- Dispatch blood
+- Record issue/dispatched details
+- Manage appointment capacity
+- View operational reports
+
+Cannot:
+
+- Change global administrator settings unless explicitly permitted
+- Create administrator accounts
+- Modify audit history
+- Bypass critical authorization controls
+
+---
+
+## ADMIN
+
+Full supervision privileges.
+
+Can:
+
+- Manage users
+- Manage hospitals
+- Manage staff
+- Approve/reject hospitals
+- Supervise inventory
+- Supervise emergency requests
+- Review audit logs
+- Configure thresholds
+- Configure escalation timers
+- View reports
+- Manage system settings
+- Intervene in workflows
+- Manage role permissions where appropriate
+
+Audit logs must remain protected from modification/deletion.
+
+---
+
+# 7. FIRESTORE DATA MODEL
+
+Design a scalable Firestore schema.
+
+Suggested top-level collections:
+
+```text
+users
+donors
+hospitals
+doctors
+staff
+appointments
+screenings
+donations
+bloodUnits
+bloodInventory
+bloodRequests
+emergencyRequests
+dispatches
+receipts
+notifications
+auditLogs
+reports
+systemSettings
+aiInsights
+```
+
+Use references between documents instead of duplicating large amounts of sensitive data.
+
+Every important document should contain appropriate metadata such as:
+
+```text
+id
+createdAt
+updatedAt
+createdBy
+updatedBy
+status
+```
+
+Use Firebase server timestamps.
+
+---
+
+# 8. USER DOCUMENT
+
+Example:
+
+```text
+users/{uid}
+```
+
+Fields:
+
+```text
+uid
+role
+fullName
+mobileNumber
+email
+phoneVerified
+emailVerified
+accountStatus
+profileComplete
+createdAt
+updatedAt
+lastLoginAt
+```
+
+Possible account statuses:
+
+```text
+ACTIVE
+PENDING
+SUSPENDED
+DISABLED
+```
+
+---
+
+# 9. DONOR BACKEND
+
+Maintain donor-specific information separately from generic authentication information.
+
+Fields include:
+
+```text
+fullName
+dateOfBirth
+gender
+bloodGroup
+mobileNumber
+email
+address
+city
+emergencyContact
+lastDonationDate
+verificationStatus
+```
+
+Donation history must be stored separately.
+
+Registering as a donor must NEVER automatically create a donation.
+
+A donor is voluntarily choosing whether and when to donate.
+
+---
+
+# 10. HOSPITAL BACKEND
+
+Hospital registration must initially create:
+
+```text
+status = PENDING
+```
+
+Required information:
+
+```text
+hospitalName
+registrationNumber
+licenseNumber
+hospitalType
+address
+city
+contactNumber
+officialEmail
+contactPerson
+hospitalAdministratorName
+```
+
+Hospital types:
+
+```text
+GOVERNMENT
+PRIVATE
+CLINIC
+MEDICAL_COLLEGE
+TEACHING_HOSPITAL
+```
+
+Only an approved hospital may create blood requests.
+
+---
+
+# 11. HOSPITAL VERIFICATION
+
+Implement an admin verification workflow.
+
+```text
+Hospital Registration
+        ↓
+Pending
+        ↓
+Admin Review
+        ↓
+Approved / Rejected
+```
+
+Rejected hospitals must not create requests.
+
+Store verification metadata:
+
+```text
+verifiedBy
+verifiedAt
+verificationStatus
+rejectionReason
+```
+
+Never permanently delete important verification history.
+
+---
+
+# 12. DOCTOR MANAGEMENT
+
+Hospitals manage their own doctors.
+
+Doctor fields:
+
+```text
+doctorId
+hospitalId
+name
+specialization
+registrationNumber
+contactNumber
+email
+status
+createdAt
+updatedAt
+```
+
+A hospital can only access its own doctors.
+
+Only active doctors should appear in the blood request dropdown.
+
+---
+
+# 13. BLOOD REQUEST SYSTEM
+
+Only approved hospitals can create blood requests.
+
+Required fields:
+
+```text
+requestId
+hospitalId
+patientId
+caseId
+bloodGroup
+unitsRequired
+priority
+doctorId
+status
+requestedAt
+```
+
+Blood groups:
+
+```text
+A+
+A-
+B+
+B-
+AB+
+AB-
+O+
+O-
+```
+
+Priority:
+
+```text
+NORMAL
+URGENT
+EMERGENCY
+```
+
+Validate:
+
+- Blood group
+- Unit count
+- Hospital authorization
+- Doctor belongs to hospital
+- Patient/case ID
+- Priority
+- Required fields
+
+---
+
+# 14. BLOOD REQUEST WORKFLOW
+
+Implement:
+
+```text
+REQUESTED
+    ↓
+APPROVED
+    ↓
+RESERVED
+    ↓
+ISSUED / DISPATCHED
+    ↓
+RECEIVED
+    ↓
+COMPLETED
+```
+
+Possible alternate states:
+
+```text
+REJECTED
+CANCELLED
+EXPIRED
+PARTIALLY_FULFILLED
+```
+
+Every status change must be logged.
+
+Store:
+
+```text
+previousStatus
+newStatus
+changedBy
+changedAt
+reason
+```
+
+---
+
+# 15. EMERGENCY BLOOD REQUEST
+
+Emergency requests must have a dedicated backend workflow.
+
+Flow:
+
+```text
+Hospital
+   ↓
+Emergency Request
+   ↓
+Emergency Queue
+   ↓
+Staff Notification
+   ↓
+Immediate Review
+   ↓
+Blood Reservation
+   ↓
+Dispatch
+   ↓
+Hospital Receipt
+```
+
+Emergency request fields:
+
+```text
+requestId
+hospitalId
+patientId
+bloodGroup
+unitsRequired
+doctorId
+priority = EMERGENCY
+createdAt
+responseDeadline
+status
+assignedStaffId
+escalationLevel
+```
+
+---
+
+# 16. EMERGENCY ESCALATION
+
+Implement configurable escalation.
+
+Example:
+
+```text
+0 minutes → Staff notified
+5 minutes → Warning
+10 minutes → Admin escalation
+15+ minutes → Critical escalation
+```
+
+Timers must be configurable through system settings.
+
+Use Cloud Functions / Cloud Scheduler / Cloud Tasks where appropriate.
+
+Never rely on the frontend timer for actual escalation.
+
+The backend must be authoritative.
+
+---
+
+# 17. NOTIFICATIONS
+
+Implement Firebase Cloud Messaging.
+
+Notification types:
+
+```text
+Appointment Reminder
+Appointment Confirmation
+Appointment Cancellation
+Hospital Verification
+Blood Request Update
+Emergency Request
+Inventory Alert
+Expiry Alert
+Dispatch Notification
+Receipt Confirmation
+Admin Alert
+System Notification
+```
+
+During development, notifications may be simulated.
+
+The architecture must support real FCM notifications.
+
+Store notification history in Firestore.
+
+---
+
+# 18. DONOR APPOINTMENT SYSTEM
+
+Appointments are voluntary.
+
+The system must NEVER automatically book a donor.
+
+Support:
+
+```text
+Available
+Booked
+Cancelled
+Rescheduled
+Completed
+No-show
+```
+
+Generate appointment slots based on configurable daily capacity.
+
+Staff can:
+
+- Open slots
+- Block slots
+- Modify capacity
+- Adjust availability
+
+Donors can:
+
+- View slots
+- Book
+- Reschedule
+- Cancel
+
+No-show must not automatically result in punishment or restriction.
+
+---
+
+# 19. SCREENING SYSTEM
+
+Staff/authorized medical personnel manually record screening results.
+
+Fields:
+
+```text
+bloodPressure
+pulse
+temperature
+hemoglobin
+weight
+questionnaire
+observations
+remarks
+finalDecision
+screenedBy
+screenedAt
+```
+
+Decision:
+
+```text
+ELIGIBLE
+DEFERRED
+NOT_ELIGIBLE
+```
+
+The backend must store the decision entered by authorized staff.
+
+The system must NOT independently make medical eligibility decisions.
+
+---
+
+# 20. DONATION RECORD
+
+When a donation is accepted:
+
+Generate a unique:
+
+```text
+Blood Unit ID
+```
+
+Store:
+
+```text
+donationId
+donorId
+bloodUnitId
+bloodGroup
+collectionDate
+collectedBy
+collectionLocation
+appointmentId
+screeningId
+status
+```
+
+Registration alone must never create a blood unit.
+
+Only an authorized completed donation process may create one.
+
+---
+
+# 21. BLOOD UNIT LIFECYCLE
+
+Every blood unit follows:
+
+```text
+COLLECTED
+    ↓
+UNDER_TESTING
+    ↓
+AVAILABLE
+    ↓
+RESERVED
+    ↓
+ISSUED / DISPATCHED
+    ↓
+RECEIVED
+```
+
+Alternative:
+
+```text
+EXPIRED
+DISCARDED
+REJECTED
+```
+
+Every lifecycle transition must be authorized and audited.
+
+---
+
+# 22. BLOOD UNIT IDENTIFICATION
+
+Every blood unit must have:
+
+```text
+Unique Blood Unit ID
+Barcode
+QR Code
+```
+
+The backend stores the identifier.
+
+Frontend can display/scan the barcode or QR code.
+
+Scanning must retrieve the correct blood unit from the backend.
+
+---
+
+# 23. BLOOD TESTING / QUALITY CONTROL
+
+Blood must not immediately become available after collection.
+
+Workflow:
+
+```text
+Collected
+    ↓
+Under Testing
+    ↓
+Testing Result
+    ↓
+Staff Approval
+    ↓
+Available
+```
+
+Store:
+
+```text
+testResults
+testedBy
+testedAt
+qualityStatus
+remarks
+approvalStatus
+approvedBy
+approvedAt
+```
+
+The backend stores staff-entered results.
+
+It must NOT interpret medical test results.
+
+---
+
+# 24. INVENTORY MANAGEMENT
+
+Track Whole Blood only.
+
+Blood groups:
+
+```text
+A+
+A-
+B+
+B-
+AB+
+AB-
+O+
+O-
+```
+
+Inventory should track:
+
+```text
+available
+reserved
+issued
+expired
+discarded
+```
+
+Inventory changes must be generated from authorized transactions rather than arbitrary frontend edits.
+
+Example:
+
+```text
+Donation Approved
+      ↓
+Blood Unit Added
+      ↓
+Inventory Updated
+```
+
+and:
+
+```text
+Blood Reserved
+      ↓
+Available decreases
+Reserved increases
+```
+
+and:
+
+```text
+Blood Issued
+      ↓
+Reserved decreases
+Issued increases
+```
+
+---
+
+# 25. INVENTORY CONSISTENCY
+
+Prevent:
+
+- Negative inventory
+- Double reservation
+- Double issuance
+- Reserving expired units
+- Issuing unavailable units
+- Concurrent conflicting updates
+
+Use Firestore transactions where required.
+
+Inventory operations must be atomic.
+
+---
+
+# 26. BLOOD ALLOCATION
+
+When fulfilling a request:
+
+1. Validate request.
+2. Validate hospital authorization.
+3. Validate blood group.
+4. Find eligible available units.
+5. Exclude expired/rejected/discarded units.
+6. Reserve required units.
+7. Update inventory atomically.
+8. Record reservation.
+9. Notify relevant users.
+
+Never allow the frontend to directly modify inventory counts.
+
+---
+
+# 27. DISPATCH
+
+Create a dispatch record.
+
+Fields:
+
+```text
+dispatchId
+requestId
+hospitalId
+bloodUnitIds
+quantity
+dispatchedBy
+dispatchDateTime
+status
+notes
+```
+
+Status:
+
+```text
+PREPARING
+DISPATCHED
+RECEIVED
+DISCREPANCY
+```
+
+---
+
+# 28. HOSPITAL RECEIPT CONFIRMATION
+
+Hospital must confirm receipt.
+
+Store:
+
+```text
+receivedBy
+receivedAt
+quantityReceived
+bloodUnitIds
+verificationStatus
+discrepancy
+remarks
+```
+
+Possible result:
+
+```text
+MATCHED
+DISCREPANCY
+```
+
+Discrepancies must create an auditable record and notification.
+
+---
+
+# 29. EXPIRY MANAGEMENT
+
+Backend must automatically monitor expiry dates.
+
+Example:
+
+```text
+30 days remaining → Warning
+7 days remaining → Urgent
+Expired → Automatically unavailable
+```
+
+Expired units must never be allocated.
+
+Expiry processing should run server-side.
+
+---
+
+# 30. INVENTORY ALERTS
+
+Allow configurable minimum stock thresholds.
+
+Example:
+
+```text
+O- minimum = configurable
+O+ minimum = configurable
+A+ minimum = configurable
+...
+```
+
+Alert levels:
+
+```text
+NORMAL
+LOW
+CRITICAL
+```
+
+Generate notifications for authorized staff/admin users.
+
+---
+
+# 31. AUDIT LOGGING
+
+Create an immutable-style audit trail for critical actions.
+
+Log:
+
+```text
+auditId
+actorUid
+actorRole
+action
+resourceType
+resourceId
+timestamp
+previousValue
+newValue
+ip/device metadata where appropriate
+```
+
+Important actions include:
+
+- Login/security events
+- Hospital approval
+- Hospital rejection
+- User role changes
+- Blood request creation
+- Request approval
+- Emergency escalation
+- Blood reservation
+- Blood issuance
+- Blood unit status changes
+- Inventory changes
+- Donor screening
+- Donation creation
+- Receipt confirmation
+- Admin configuration changes
+
+Users must not be able to modify their own audit logs.
+
+---
+
+# 32. SECURITY
+
+Implement strong Firebase Security Rules.
+
+Rules must enforce:
+
+- Authentication
+- Role authorization
+- Resource ownership
+- Hospital ownership
+- Staff permissions
+- Admin permissions
+
+Never trust:
+
+```text
+frontend role
+URL
+request body role
+client-side validation
+```
+
+as the only authorization mechanism.
+
+Sensitive operations should be performed through trusted Cloud Functions when necessary.
+
+Use App Check to reduce unauthorized client access.
+
+---
+
+# 33. DATA VALIDATION
+
+Validate all important inputs server-side.
+
+Examples:
+
+```text
+Blood group
+Mobile number
+Email
+Hospital registration number
+Units required
+Priority
+Doctor ownership
+Appointment ownership
+Blood Unit ID
+Request status transitions
+```
+
+Reject malformed or unauthorized requests.
+
+---
+
+# 34. PRIVACY
+
+Minimize unnecessary exposure of sensitive information.
+
+Examples:
+
+- Donors cannot see other donors.
+- Hospitals cannot see unrelated hospital records.
+- Staff only sees information required for their job.
+- Admin access is logged.
+- Patient information should be limited to operational requirements.
+
+Avoid storing unnecessary medical information.
+
+---
+
+# 35. REPORTING
+
+Generate backend data required for reports:
+
+```text
+Blood collected
+Blood issued
+Blood expired
+Blood discarded
+Blood group demand
+Donation trends
+Hospital request trends
+Emergency requests
+Fulfillment time
+Donor activity
+Shortage trends
+Inventory trends
+```
+
+Support date filtering:
+
+```text
+Today
+7 days
+30 days
+3 months
+6 months
+1 year
+Custom range
+```
+
+Reports must respect role permissions.
+
+---
+
+# 36. AI BACKEND SERVICES
+
+Create an AI service layer, but keep AI decisions strictly operational.
+
+Potential AI features:
+
+### Demand Forecasting
+
+Predict future blood demand by:
+
+- Blood group
+- Time period
+- Hospital
+- Historical demand
+
+### Shortage Prediction
+
+Identify potential future shortages.
+
+### Donation Trend Analysis
+
+Analyze:
+
+- Donation frequency
+- Blood-group trends
+- Appointment trends
+
+### Emergency Demand Prediction
+
+Estimate potential emergency demand based on historical patterns.
+
+### Smart Operational Insights
+
+Examples:
+
+```text
+"O− inventory may fall below the configured threshold within 7 days."
+
+"Emergency requests increased by 18% this month."
+
+"A+ demand is higher than the previous month."
+```
+
+AI must NOT:
+
+- Diagnose patients
+- Determine donor eligibility
+- Override medical staff
+- Decide whether blood is medically suitable
+- Automatically approve medical decisions
+
+---
+
+# 37. AI ASSISTANT
+
+Implement a backend service for the HEMORA AI Assistant.
+
+Examples:
+
+```text
+How many O− units are available?
+
+Which blood groups are currently low?
+
+How many emergency requests are pending?
+
+How many donations happened this month?
+
+Which hospitals have pending requests?
+```
+
+The assistant must respect the user's role.
+
+For example:
+
+```text
+DONOR → personal information only
+
+HOSPITAL → own hospital information
+
+STAFF → operational blood-bank information
+
+ADMIN → authorized system-wide information
+```
+
+Never expose unauthorized patient, donor, hospital, or inventory data.
+
+---
+
+# 38. CLOUD FUNCTIONS
+
+Use Cloud Functions for trusted server-side operations.
+
+Potential functions:
+
+```text
+createUserProfile
+approveHospital
+createBloodRequest
+createEmergencyRequest
+reserveBlood
+issueBlood
+confirmReceipt
+recordDonation
+generateBloodUnit
+updateInventory
+processExpiry
+sendNotification
+escalateEmergency
+createAuditLog
+generateReports
+generateAIInsights
+```
+
+Keep privileged operations outside direct client manipulation.
+
+---
+
+# 39. TRANSACTION SAFETY
+
+Use Firestore transactions for operations involving multiple dependent updates.
+
+Critical transaction examples:
+
+```text
+Blood reservation
+Inventory update
+Blood issuance
+Blood unit state transition
+Appointment booking
+Emergency request assignment
+```
+
+Prevent race conditions such as two hospitals reserving the same blood unit.
+
+---
+
+# 40. ERROR HANDLING
+
+Use consistent backend errors.
+
+Example categories:
+
+```text
+UNAUTHENTICATED
+UNAUTHORIZED
+INVALID_ARGUMENT
+NOT_FOUND
+ALREADY_EXISTS
+FAILED_PRECONDITION
+RESOURCE_EXHAUSTED
+CONFLICT
+INTERNAL
+```
+
+Never expose sensitive internal errors to users.
+
+Log technical errors securely for developers/admins.
+
+---
+
+# 41. DEVELOPMENT ENVIRONMENT
+
+Use Firebase Emulator Suite for development.
+
+Create separate environments:
+
+```text
+development
+testing
+production
+```
+
+Development must not accidentally modify production data.
+
+Use environment configuration for:
+
+```text
+Firebase project ID
+API configuration
+notification settings
+AI configuration
+threshold settings
+```
+
+Never commit secrets to GitHub.
+
+---
+
+# 42. SEED / DEMO DATA
+
+Provide development-only seed data.
+
+Example:
+
+```text
+Demo Donor
+Demo Hospital
+Demo Staff
+Demo Admin
+
+Sample Doctors
+Sample Blood Requests
+Sample Blood Units
+Sample Inventory
+Sample Appointments
+Sample Emergency Requests
+Sample Notifications
+```
+
+Clearly separate demo data from production data.
+
+---
+
+# 43. FRONTEND INTEGRATION CONTRACT
+
+Design backend APIs/functions so the existing frontend can integrate without major restructuring.
+
+The frontend should eventually be able to call services such as:
+
+```text
+authService
+userService
+donorService
+hospitalService
+doctorService
+appointmentService
+requestService
+inventoryService
+donationService
+emergencyService
+notificationService
+reportService
+aiService
+```
+
+Do not tightly couple UI components directly to Firestore implementation details.
+
+---
+
+# 44. REAL-TIME DATA
+
+Use Firestore real-time listeners where beneficial.
+
+Examples:
+
+- Emergency queue
+- Blood inventory
+- Request status
+- Notifications
+- Appointment availability
+- Admin dashboard
+- Hospital request tracking
+
+Avoid unnecessary real-time listeners for static data.
+
+---
+
+# 45. SCALABILITY
+
+Although the MVP uses one centralized blood bank, design the data model so multiple branches can be introduced later.
+
+Future structure:
+
+```text
+bloodBanks
+branches
+inventory
+staffAssignments
+```
+
+Every inventory-related entity should be capable of being associated with a future:
+
+```text
+branchId
+```
+
+Do not hard-code the architecture around only one physical branch.
+
+---
+
+# 46. BACKEND BUSINESS RULES
+
+Enforce these rules server-side:
+
+### Rule 1
+
+Only approved hospitals can create blood requests.
+
+### Rule 2
+
+Only authorized staff/admin can process requests.
+
+### Rule 3
+
+Only authorized staff can record screening.
+
+### Rule 4
+
+Only completed/approved donation workflows create blood units.
+
+### Rule 5
+
+Registration does not equal donation.
+
+### Rule 6
+
+Expired blood cannot be reserved or issued.
+
+### Rule 7
+
+Inventory cannot become negative.
+
+### Rule 8
+
+Donors cannot access other donor records.
+
+### Rule 9
+
+Hospitals cannot access other hospitals' private requests.
+
+### Rule 10
+
+Hospitals cannot modify blood inventory.
+
+### Rule 11
+
+Emergency escalation must happen server-side.
+
+### Rule 12
+
+Critical workflow changes must generate audit logs.
+
+### Rule 13
+
+Frontend role selection is never trusted as authorization.
+
+### Rule 14
+
+Medical eligibility decisions remain with authorized personnel.
+
+---
+
+# 47. TESTING
+
+Create backend tests for:
+
+### Authentication
+
+- Valid login
+- Invalid login
+- Role authorization
+- Suspended user
+
+### Donors
+
+- Registration
+- Profile update
+- Appointment booking
+- Cancellation
+- Donation history
+
+### Hospitals
+
+- Registration
+- Pending status
+- Approval
+- Rejection
+- Doctor management
+
+### Requests
+
+- Normal request
+- Urgent request
+- Emergency request
+- Approval
+- Reservation
+- Dispatch
+- Receipt
+
+### Inventory
+
+- Add unit
+- Reserve unit
+- Issue unit
+- Expire unit
+- Prevent negative inventory
+- Prevent double reservation
+
+### Security
+
+- Unauthorized donor access
+- Unauthorized hospital access
+- Staff permission checks
+- Admin permission checks
+
+### Emergency
+
+- Timer
+- Staff notification
+- Escalation
+- Admin intervention
+
+---
+
+# 48. FIREBASE SECURITY RULE TESTING
+
+Use the Firebase Emulator Suite to test security rules.
+
+Create tests for:
+
+```text
+Donor → own data only
+Hospital → own data only
+Staff → operational data
+Admin → authorized global access
+Unauthenticated → denied
+Wrong role → denied
+Wrong hospital → denied
+```
+
+Security rules must be treated as a critical part of the backend.
+
+---
+
+# 49. PERFORMANCE
+
+Optimize Firestore usage.
+
+Avoid:
+
+- Unnecessary document reads
+- Unbounded queries
+- Excessive listeners
+- Duplicate data
+- Large documents
+- Inefficient dashboard queries
+
+Use appropriate:
+
+- Composite indexes
+- Pagination
+- Aggregated statistics
+- Cached/configuration data
+- Server-side aggregation where appropriate
+
+---
+
+# 50. BACKEND DOCUMENTATION
+
+Create clear documentation for:
+
+```text
+Architecture
+Firestore schema
+Authentication
+RBAC
+Security rules
+Cloud Functions
+Business workflows
+Blood lifecycle
+Emergency workflow
+Notification system
+AI services
+Environment setup
+Testing
+Deployment
+```
+
+Include diagrams for:
+
+```text
+Authentication flow
+Blood request workflow
+Emergency workflow
+Donation workflow
+Blood unit lifecycle
+Inventory flow
+Role permissions
+Firestore architecture
+```
+
+---
+
+# 51. DEPLOYMENT READINESS
+
+Prepare the backend for deployment to Firebase.
+
+Deployment components:
+
+```text
+Firebase Authentication
+Firestore
+Cloud Functions
+Cloud Messaging
+Storage
+Security Rules
+Indexes
+App Check
+```
+
+Use production-safe configuration.
+
+Never deploy development test users or fake credentials to production.
+
+---
+
+# 52. IMPORTANT BACKEND PRINCIPLE
+
+The frontend is only the presentation layer.
+
+The backend is the source of truth.
+
+Never trust:
+
+```text
+Frontend role
+Frontend validation
+Frontend inventory count
+Frontend request status
+Frontend emergency timer
+Frontend permissions
+```
+
+Every critical decision must be validated by the backend.
+
+---
+
+# 53. IMPLEMENTATION ORDER
+
+Build the backend in this order:
+
+### Phase 1 — Firebase Setup
+
+- Firebase project
+- Authentication
+- Firestore
+- Functions
+- App Check
+- Emulator Suite
+
+### Phase 2 — Authentication + RBAC
+
+- Users
+- Roles
+- Custom claims
+- Security rules
+- Account status
+
+### Phase 3 — Donor
+
+- Profile
+- Appointments
+- Donation history
+
+### Phase 4 — Hospital
+
+- Registration
+- Verification
+- Doctors
+- Hospital profile
+
+### Phase 5 — Blood Requests
+
+- Normal requests
+- Urgent requests
+- Approval workflow
+
+### Phase 6 — Emergency
+
+- Emergency requests
+- Emergency queue
+- Notifications
+- Escalation
+
+### Phase 7 — Donation
+
+- Screening
+- Donation records
+- Blood Unit generation
+
+### Phase 8 — Inventory
+
+- Testing
+- Blood unit lifecycle
+- Inventory
+- Reservation
+- Issuance
+- Expiry
+
+### Phase 9 — Dispatch + Receipt
+
+- Dispatch
+- Hospital confirmation
+- Discrepancy handling
+
+### Phase 10 — Notifications
+
+- FCM
+- Notification history
+- SMS integration-ready architecture
+
+### Phase 11 — Audit + Reports
+
+- Audit logs
+- Analytics
+- Operational reports
+
+### Phase 12 — AI
+
+- Demand forecasting
+- Shortage prediction
+- AI insights
+- Role-aware AI Assistant
+
+### Phase 13 — Testing + Security
+
+- Security rules
+- Unit tests
+- Integration tests
+- Emulator tests
+- Performance testing
+
+### Phase 14 — Production Readiness
+
+- Environment separation
+- Monitoring
+- Logging
+- Deployment
+- Documentation
+- Backup/recovery strategy
+
+---
+
+# 54. FINAL BACKEND REQUIREMENT
+
+Build HEMORA as a secure, scalable Firebase backend that can support the existing React/TypeScript frontend and future Android application.
+
+The backend must behave like a real blood-bank operational system while remaining strictly within appropriate medical boundaries.
+
+The system must prioritize:
+
+**Security → Reliability → Data integrity → Emergency responsiveness → Auditability → Scalability → Maintainability**
+
+The final architecture must be production-oriented, modular, testable, secure, and ready for future integration with the HEMORA frontend and Android application.
+
+Do not simplify the backend into a basic CRUD application.
+
+HEMORA should behave like a serious real-world Blood Bank Management and Emergency Coordination Platform.

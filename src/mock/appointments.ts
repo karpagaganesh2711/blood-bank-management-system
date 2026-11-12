@@ -1,0 +1,85 @@
+import { DonationAppointment } from '../types/hemora';
+
+export const INITIAL_MOCK_APPOINTMENTS: DonationAppointment[] = [
+  {
+    id: 'apt-01',
+    appointmentCode: 'APT-HMR-4421',
+    donorId: 'usr-donor-01',
+    donorName: 'Alex Rivers',
+    donorBloodGroup: 'O-',
+    centerName: 'HEMORA Central Apheresis & Transfusion Pavilion',
+    centerAddress: '100 Medical Center Way, Metro City',
+    date: '2026-11-14',
+    timeSlot: '09:30 AM',
+    status: 'SCHEDULED',
+    componentTarget: 'Packed Red Blood Cells (PRBC)',
+    notes: 'Universal emergency reserve replenishment program.',
+  },
+  {
+    id: 'apt-02',
+    appointmentCode: 'APT-HMR-4422',
+    donorId: 'usr-donor-02',
+    donorName: 'Elena Rostova',
+    donorBloodGroup: 'O-',
+    centerName: 'HEMORA North Hills Collection Station',
+    centerAddress: '24 Pinewood Ave, North Hills',
+    date: '2026-11-16',
+    timeSlot: '11:00 AM',
+    status: 'SCHEDULED',
+    componentTarget: 'Whole Blood',
+  },
+  {
+    id: 'apt-03',
+    appointmentCode: 'APT-HMR-4418',
+    donorId: 'usr-donor-01',
+    donorName: 'Alex Rivers',
+    donorBloodGroup: 'O-',
+    centerName: 'HEMORA Central Apheresis & Transfusion Pavilion',
+    centerAddress: '100 Medical Center Way, Metro City',
+    date: '2026-09-12',
+    timeSlot: '10:00 AM',
+    status: 'COMPLETED',
+    componentTarget: 'Packed Red Blood Cells (PRBC)',
+    notes: 'Phlebotomy completed smoothly. Bag HMR-2026-8819 banked.',
+  },
+  {
+    id: 'apt-04',
+    appointmentCode: 'APT-HMR-4419',
+    donorId: 'usr-donor-05',
+    donorName: 'Sophia Lin',
+    donorBloodGroup: 'A+',
+    centerName: 'Metro Civic Center Mobile Blood Unit',
+    centerAddress: 'Civic Plaza Atrium',
+    date: '2026-11-09',
+    timeSlot: '02:15 PM',
+    status: 'COMPLETED',
+    componentTarget: 'Platelet Apheresis',
+  }
+];
+
+export const MOCK_CENTERS = [
+  {
+    id: 'ctr-01',
+    name: 'HEMORA Central Apheresis & Transfusion Pavilion',
+    address: '100 Medical Center Way, Metro City',
+    openHours: '07:30 AM – 07:00 PM',
+    capacityDaily: 120,
+    phone: '+1 (555) 436-6721',
+  },
+  {
+    id: 'ctr-02',
+    name: 'HEMORA North Hills Collection Station',
+    address: '24 Pinewood Ave, North Hills',
+    openHours: '08:00 AM – 05:30 PM',
+    capacityDaily: 60,
+    phone: '+1 (555) 881-2299',
+  },
+  {
+    id: 'ctr-03',
+    name: 'Metro Civic Center Mobile Blood Unit',
+    address: 'Civic Plaza Atrium, Downtown',
+    openHours: '09:00 AM – 05:00 PM',
+    capacityDaily: 80,
+    phone: '+1 (555) 302-8844',
+  }
+];
